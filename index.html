@@ -116,6 +116,16 @@
   .hero { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: clamp(1.5rem, 4vw, 3.5rem); align-items: center; padding: clamp(2rem, 6vw, 4.5rem) 0; }
   @media (max-width: 900px) { .hero { grid-template-columns: 1fr; } }
   .lead { font-size: 1.2rem; color: var(--muted); max-width: 36rem; }
+  .eyebrow { display: inline-flex; align-items: center; gap: .45rem; font-size: .74rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--link); }
+  .featured-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1.25rem; }
+  .news-card { display: flex; flex-direction: column; gap: .85rem; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 1.2rem; box-shadow: 0 8px 28px rgba(0,0,0,.04); }
+  .news-card__top { display: flex; align-items: center; justify-content: space-between; gap: .75rem; color: var(--muted); font-size: .82rem; }
+  .news-card h3 { margin: 0; font-size: 1.3rem; line-height: 1.2; }
+  .news-card h3 a { color: var(--fg); text-decoration: none; }
+  .news-card h3 a:hover { text-decoration: underline; }
+  .news-card p { margin: 0; color: var(--muted); }
+  .news-card__footer { display: flex; align-items: center; justify-content: space-between; gap: .75rem; font-size: .88rem; color: var(--muted); padding-top: .4rem; border-top: 1px solid var(--line); }
+  .news-card__footer a { color: var(--link); text-decoration: none; font-weight: 700; }
 
   /* Terminal */
   .term { background: var(--term-bg); color: var(--term-fg); border: 1px solid var(--term-line); border-radius: 10px; font-family: var(--mono); font-size: 1.05rem; line-height: 1.5; overflow: hidden; }
@@ -377,6 +387,15 @@
   function strip(html) { return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(); }
   function mins(html) { return Math.max(1, Math.ceil(strip(html).split(' ').length / 200)); }
   function tagList(tags) { return '<ul class="tags" aria-label="Tags">' + tags.map(function (t) { return '<li>' + t + '</li>'; }).join('') + '</ul>'; }
+  function postCard(p) {
+    return '<article class="news-card">' +
+      '<div class="news-card__top"><span class="eyebrow">Study note</span><time datetime="' + p.date + '">' + fmtDate(p.date) + '</time></div>' +
+      '<h3><a href="#/blog/' + p.slug + '">' + p.title + '</a></h3>' +
+      '<p>' + p.summary + '</p>' +
+      tagList(p.tags) +
+      '<div class="news-card__footer"><span>' + mins(p.body) + ' min read</span><a href="#/blog/' + p.slug + '">Read post →</a></div>' +
+    '</article>';
+  }
   function postRow(p, level) {
     level = level || 'h3';
     return '<article class="post-row">' +
@@ -443,7 +462,7 @@
 
         '<section class="block" aria-labelledby="latest-h">' +
           '<div class="block-head"><h2 id="latest-h">Latest from the blog</h2><a href="#/blog">All posts</a></div>' +
-          posts.slice(0, 3).map(function (p) { return postRow(p, 'h3'); }).join('') +
+          '<div class="featured-grid">' + posts.slice(0, 3).map(postCard).join('') + '</div>' +
         '</section>',
       after: initTerminal
     };
@@ -534,7 +553,7 @@
           '</div>' +
         '</div>' +
         '<p class="count" id="postCount" aria-live="polite"></p>' +
-        '<div id="postList"></div>',
+        '<div id="postList" class="featured-grid" style="margin-top:1rem"></div>',
       after: function () {
         function filtered() {
           var q = blogState.q.toLowerCase();
@@ -547,7 +566,7 @@
         function paint() {
           var list = filtered();
           $('#postList').innerHTML = list.length
-            ? list.map(function (p) { return postRow(p, 'h2'); }).join('')
+            ? list.map(postCard).join('')
             : '<p class="empty">No posts match that search. <button class="linkbtn" type="button" id="clearFilters">Clear the search and filter</button></p>';
           $('#postCount').textContent = list.length + (list.length === 1 ? ' post' : ' posts');
           var c = $('#clearFilters');
