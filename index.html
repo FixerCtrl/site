@@ -10,7 +10,12 @@
 <link href="https://fonts.googleapis.com/css2?family=Ubuntu:wght@400;500;700&family=Ubuntu+Mono:wght@400;700&display=swap" rel="stylesheet">
 <script>
   // Apply a saved theme before first paint to avoid a flash.
-  try { var t = localStorage.getItem('fixerctrl-theme'); if (t) document.documentElement.setAttribute('data-theme', t); } catch (e) {}
+  try {
+    var t = localStorage.getItem('fixerctrl-theme');
+    if (t) document.documentElement.setAttribute('data-theme', t);
+    var bg = localStorage.getItem('fixerctrl-background');
+    if (bg) document.documentElement.style.setProperty('--site-image', 'url("' + bg + '")');
+  } catch (e) {}
 </script>
 <style>
   :root {
@@ -28,6 +33,7 @@
     --term-fg: #e9e9e9;
     --term-dim: #8f8f8f;
     --term-line: #2a2a2a;
+    --site-image: url("https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=2200&q=85");
     --font: "Ubuntu", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     --mono: "Ubuntu Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, "Liberation Mono", monospace;
     --wide: 1080px;
@@ -49,6 +55,12 @@
     --field: #8a8a8a; --link: #00f6ff; --focus: #00f6ff; --btn-border: #00f6ff;
     --term-line: #2a2a2a; color-scheme: dark;
   }
+  :root[data-theme="dark"] body::after,
+  :root[data-theme="dark"] body::before { opacity: .2; }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) body::after { background: rgba(0,0,0,.72); }
+  }
+  :root[data-theme="dark"] body::after { background: rgba(0,0,0,.72); }
 
   html { scroll-padding-top: env(safe-area-inset-top, 0px); -webkit-text-size-adjust: 100%; }
   *, *::before, *::after { box-sizing: border-box; }
@@ -58,6 +70,16 @@
     display: flex; flex-direction: column;
     background: var(--bg); color: var(--fg);
     font-family: var(--font); font-size: 1.0625rem; line-height: 1.65;
+    position: relative;
+  }
+  body::before {
+    content: ""; position: fixed; inset: 0; z-index: -2; pointer-events: none;
+    background-image: var(--site-image); background-size: cover; background-position: center;
+    filter: grayscale(1) contrast(1.25); opacity: .13;
+  }
+  body::after {
+    content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+    background: linear-gradient(90deg, rgba(255,255,255,.85), rgba(255,255,255,.62) 52%, rgba(255,255,255,.86));
   }
   main { flex: 1; }
   main:focus { outline: none; }
@@ -90,6 +112,8 @@
   .tools { display: flex; gap: .25rem; }
   .icon-btn { width: 2.5rem; height: 2.5rem; display: inline-grid; place-items: center; background: transparent; color: var(--fg); border: 0; border-radius: 6px; cursor: pointer; }
   .icon-btn:hover { background: var(--surface); }
+  .auth-control { color: var(--fg); font-size: .9rem; font-weight: 700; text-decoration: none; white-space: nowrap; }
+  .auth-control:hover { color: var(--link); }
   .menu-btn { display: none; }
   .menu-btn .x { display: none; }
   .site-header.open .menu-btn .bars { display: none; }
@@ -119,6 +143,7 @@
   .eyebrow { display: inline-flex; align-items: center; gap: .45rem; font-size: .74rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--link); }
   .featured-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 1.25rem; }
   .news-card { display: flex; flex-direction: column; gap: .85rem; background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 1.2rem; box-shadow: 0 8px 28px rgba(0,0,0,.04); }
+  .post-image { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; filter: grayscale(1) contrast(1.1); border: 1px solid var(--line); }
   .news-card__top { display: flex; align-items: center; justify-content: space-between; gap: .75rem; color: var(--muted); font-size: .82rem; }
   .news-card h3 { margin: 0; font-size: 1.3rem; line-height: 1.2; }
   .news-card h3 a { color: var(--fg); text-decoration: none; }
@@ -187,6 +212,15 @@
   .chip[aria-pressed="true"] { background: var(--fg); color: var(--bg); border-color: var(--fg); }
   .count { color: var(--muted); margin: .5rem 0 0; font-size: .95rem; }
   .empty { padding: 1.5rem 0; border-top: 1px solid var(--line); }
+  .write-panel { max-width: 46rem; }
+  .write-panel .field { margin-bottom: 1.1rem; }
+  .write-panel textarea { min-height: 15rem; }
+  .upload { font: inherit; max-width: 100%; }
+  .upload-note { display: block; color: var(--muted); font-size: .9rem; }
+  .settings-panel { max-width: 46rem; }
+  .settings-preview { width: 100%; aspect-ratio: 16 / 6; object-fit: cover; margin: 1rem 0; border: 1px solid var(--line); filter: grayscale(1) contrast(1.1); background: var(--surface); }
+  .form-status { margin-top: 1rem; padding: .85rem 1rem; border-left: 4px solid var(--link); background: var(--surface); }
+  .form-status.error { border-left-color: #c40000; }
 
   /* Articles */
   .prose { max-width: 66ch; }
@@ -255,6 +289,7 @@
       <button class="icon-btn" id="themeBtn" type="button" aria-label="Switch theme">
         <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>
       </button>
+      <a class="auth-control" id="authControl" href="#/auth">Sign in</a>
       <button class="icon-btn menu-btn" id="menuBtn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mainNav">
         <svg class="bars" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
         <svg class="x" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
@@ -274,22 +309,48 @@
   </div>
 </footer>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function () {
   'use strict';
 
   /* ----- Edit these to personalise the site ----- */
   var CONFIG = {
-    handle: 'fixerctrl',
-    email: 'your-email@example.com',
+    handle: '@fixerctrl',
+    email: 'fixerctrl@gmail.com',
     github: 'https://github.com/fixerctrl',
-    linkedin: ''            // add your LinkedIn URL to show it on the Contact page and footer
+    linkedin: '',           // add your LinkedIn URL to show it on the Contact page and footer
+    supabaseUrl: '',        // add your Supabase project URL
+    supabaseAnonKey: ''     // add your Supabase publishable/anon key
   };
 
   var $ = function (s, r) { return (r || document).querySelector(s); };
   var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var main = $('#main');
+  var authClient = null, currentUser = null;
+
+  function authConfigured() { return Boolean(CONFIG.supabaseUrl && CONFIG.supabaseAnonKey && window.supabase); }
+  function updateAuthControl() {
+    var control = $('#authControl');
+    if (!control) return;
+    control.textContent = currentUser ? 'Sign out' : 'Sign in';
+    control.href = currentUser ? '#/' : '#/auth';
+  }
+  function initAuth() {
+    if (!authConfigured()) return;
+    authClient = window.supabase.createClient(CONFIG.supabaseUrl, CONFIG.supabaseAnonKey);
+    authClient.auth.getSession().then(function (result) {
+      currentUser = result.data.session ? result.data.session.user : null;
+      updateAuthControl();
+      render();
+    });
+    authClient.auth.onAuthStateChange(function (_event, session) {
+      currentUser = session ? session.user : null;
+      updateAuthControl();
+      render();
+    });
+  }
 
   /* ----- Blog posts (newest first). Add a new object to publish a post. ----- */
   var posts = [
@@ -380,28 +441,69 @@
     }
   ];
 
+  function loadSavedPosts() {
+    try {
+      var saved = JSON.parse(localStorage.getItem('fixerctrl-posts') || '[]');
+      if (Array.isArray(saved)) posts = saved.concat(posts).sort(function (a, b) { return b.date.localeCompare(a.date); });
+    } catch (e) {}
+  }
+  loadSavedPosts();
+
   /* ----- Helpers ----- */
   function fmtDate(d) {
     return new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   }
   function strip(html) { return html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim(); }
+  function escapeHtml(value) { return String(value).replace(/[&<>"']/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]; }); }
+  function slugify(value) {
+    return value.toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'post';
+  }
+  function bodyFromText(value) {
+    return value.trim().split(/\n\s*\n/).filter(Boolean).map(function (part) { return '<p>' + escapeHtml(part).replace(/\n/g, '<br>') + '</p>'; }).join('');
+  }
+  function imageSrc(value) {
+    return /^data:image\/(?:png|jpeg|gif|webp);base64,/i.test(value || '') ? value : '';
+  }
+  function postImage(p) {
+    var src = imageSrc(p.image);
+    return src ? '<img class="post-image" src="' + src + '" alt="" loading="lazy">' : '';
+  }
+  function readImage(file, done) {
+    if (!file) return done(null, '');
+    if (!/^image\/(?:png|jpeg|gif|webp)$/i.test(file.type)) return done('Choose a PNG, JPEG, GIF or WebP image.');
+    if (file.size > 1500000) return done('Images must be smaller than 1.5 MB.');
+    var reader = new FileReader();
+    reader.onload = function () { done(null, reader.result); };
+    reader.onerror = function () { done('The image could not be read.'); };
+    reader.readAsDataURL(file);
+  }
+  function saveSiteBackground(dataUrl) {
+    if (!dataUrl) {
+      document.documentElement.style.removeProperty('--site-image');
+      try { localStorage.removeItem('fixerctrl-background'); } catch (e) {}
+      return;
+    }
+    document.documentElement.style.setProperty('--site-image', 'url("' + dataUrl + '")');
+    try { localStorage.setItem('fixerctrl-background', dataUrl); } catch (e) {}
+  }
   function mins(html) { return Math.max(1, Math.ceil(strip(html).split(' ').length / 200)); }
-  function tagList(tags) { return '<ul class="tags" aria-label="Tags">' + tags.map(function (t) { return '<li>' + t + '</li>'; }).join('') + '</ul>'; }
+  function tagList(tags) { return '<ul class="tags" aria-label="Tags">' + tags.map(function (t) { return '<li>' + escapeHtml(t) + '</li>'; }).join('') + '</ul>'; }
   function postCard(p) {
     return '<article class="news-card">' +
+      postImage(p) +
       '<div class="news-card__top"><span class="eyebrow">Study note</span><time datetime="' + p.date + '">' + fmtDate(p.date) + '</time></div>' +
-      '<h3><a href="#/blog/' + p.slug + '">' + p.title + '</a></h3>' +
-      '<p>' + p.summary + '</p>' +
+      '<h3><a href="#/blog/' + encodeURIComponent(p.slug) + '">' + escapeHtml(p.title) + '</a></h3>' +
+      '<p>' + escapeHtml(p.summary) + '</p>' +
       tagList(p.tags) +
-      '<div class="news-card__footer"><span>' + mins(p.body) + ' min read</span><a href="#/blog/' + p.slug + '">Read post →</a></div>' +
+      '<div class="news-card__footer"><span>' + mins(p.body) + ' min read</span><a href="#/blog/' + encodeURIComponent(p.slug) + '">Read post →</a></div>' +
     '</article>';
   }
   function postRow(p, level) {
     level = level || 'h3';
     return '<article class="post-row">' +
-      '<' + level + '><a href="#/blog/' + p.slug + '">' + p.title + '</a></' + level + '>' +
+      '<' + level + '><a href="#/blog/' + encodeURIComponent(p.slug) + '">' + escapeHtml(p.title) + '</a></' + level + '>' +
       '<p class="meta"><time datetime="' + p.date + '">' + fmtDate(p.date) + '</time><span>' + mins(p.body) + ' min read</span></p>' +
-      '<p>' + p.summary + '</p>' + tagList(p.tags) + '</article>';
+      '<p>' + escapeHtml(p.summary) + '</p>' + tagList(p.tags) + '</article>';
   }
 
   /* ----- Pages ----- */
@@ -546,6 +648,7 @@
       title: 'Blog',
       html:
         '<div class="page-head"><h1>Blog</h1><p class="lead">Notes from what I\'m studying and building.</p></div>' +
+        '<div class="actions"><a class="btn" href="#/write">Write a post</a><a class="btn ghost" href="#/settings">Site look</a></div>' +
         '<div class="controls">' +
           '<div class="field search" style="margin:0"><label for="q">Search posts</label><input id="q" type="search" value="' + blogState.q.replace(/"/g, '&quot;') + '"></div>' +
           '<div class="filters" role="group" aria-label="Filter by topic">' +
@@ -590,6 +693,158 @@
     };
   }
 
+  function authPage() {
+    if (!authConfigured()) {
+      return {
+        title: 'Sign in',
+        html: '<div class="page-head"><h1>Editor access</h1><p class="lead">Supabase authentication is not configured yet.</p></div>' +
+          '<div class="prose"><p>Add your Supabase project URL and publishable/anon key to the <code>CONFIG</code> object in this page. Then create an account here to access the writing tools.</p><p>Authentication protects the front-end editing controls. Supabase Row Level Security is still required before posts or images are moved into shared database and storage tables.</p><div class="actions"><a class="btn" href="#/blog">Back to blog</a></div></div>'
+      };
+    }
+    return {
+      title: 'Sign in',
+      html:
+        '<div class="page-head"><h1>Editor access</h1><p class="lead">Sign in to publish posts and change the site background.</p></div>' +
+        '<div class="write-panel"><form id="authForm">' +
+          '<div class="field"><label for="authEmail">Email</label><input id="authEmail" type="email" autocomplete="email" required></div>' +
+          '<div class="field"><label for="authPassword">Password</label><input id="authPassword" type="password" autocomplete="current-password" minlength="6" required></div>' +
+          '<div class="actions"><button class="btn" type="submit" data-auth-action="signin">Sign in</button><button class="btn ghost" type="submit" data-auth-action="signup">Create account</button></div>' +
+          '<div id="authStatus" class="form-status" role="status" hidden></div>' +
+        '</form></div>',
+      after: function () {
+        $('#authControl').onclick = function (e) {
+          if (!currentUser) return;
+          e.preventDefault();
+          authClient.auth.signOut();
+        };
+        $('#authForm').addEventListener('submit', function (e) {
+          e.preventDefault();
+          var action = e.submitter ? e.submitter.dataset.authAction : 'signin';
+          var email = $('#authEmail').value.trim(), password = $('#authPassword').value;
+          var status = $('#authStatus');
+          var request = action === 'signup'
+            ? authClient.auth.signUp({ email: email, password: password })
+            : authClient.auth.signInWithPassword({ email: email, password: password });
+          request.then(function (result) {
+            if (result.error) throw result.error;
+            status.hidden = false;
+            status.className = 'form-status';
+            status.textContent = action === 'signup' ? 'Account created. Check your email if confirmation is enabled.' : 'Signed in. Opening the editor...';
+            if (action === 'signin') setTimeout(function () { location.hash = '#/write'; }, 500);
+          }).catch(function (error) {
+            status.hidden = false;
+            status.className = 'form-status error';
+            status.textContent = error.message || 'Authentication failed.';
+          });
+        });
+      }
+    };
+  }
+
+  function writePost() {
+    return {
+      title: 'Write a post',
+      html:
+        '<div class="page-head"><h1>Write a post</h1><p class="lead">Create a study note directly from the front end.</p></div>' +
+        '<div class="write-panel">' +
+          '<form id="postForm">' +
+            '<div class="field"><label for="postTitle">Title</label><input id="postTitle" type="text" maxlength="120" required></div>' +
+            '<div class="field"><label for="postSummary">Summary</label><textarea id="postSummary" maxlength="240" required style="min-height:7rem"></textarea></div>' +
+            '<div class="field"><label for="postTags">Tags</label><input id="postTags" type="text" placeholder="Security, Linux" required><span class="note">Separate tags with commas.</span></div>' +
+            '<div class="field"><label for="postImage">Post image</label><input class="upload" id="postImage" type="file" accept="image/png,image/jpeg,image/gif,image/webp"><span class="upload-note">Optional. PNG, JPEG, GIF or WebP, under 1.5 MB.</span></div>' +
+            '<div class="field"><label for="postBody">Post</label><textarea id="postBody" required placeholder="Write your post here. Separate paragraphs with a blank line."></textarea><span class="note">Plain text is used so submitted content cannot inject HTML or scripts.</span></div>' +
+            '<div class="actions"><button class="btn" type="submit">Publish post</button><a class="btn ghost" href="#/blog">Cancel</a></div>' +
+            '<div id="postStatus" class="form-status" role="status" hidden></div>' +
+          '</form>' +
+        '</div>',
+      after: function () {
+        $('#postForm').addEventListener('submit', function (e) {
+          e.preventDefault();
+          var title = $('#postTitle').value.trim();
+          var summary = $('#postSummary').value.trim();
+          var tags = $('#postTags').value.split(',').map(function (tag) { return tag.trim(); }).filter(Boolean);
+          var body = $('#postBody').value.trim();
+          var status = $('#postStatus');
+          if (!title || !summary || !tags.length || !body) return;
+          var slug = slugify(title), base = slug, n = 2;
+          while (posts.some(function (p) { return p.slug === slug; })) slug = base + '-' + n++;
+          readImage($('#postImage').files[0], function (error, image) {
+            if (error) {
+              status.hidden = false;
+              status.className = 'form-status error';
+              status.textContent = error;
+              return;
+            }
+            var created = { slug: slug, title: title, date: new Date().toISOString().slice(0, 10), tags: tags, summary: summary, image: image, body: bodyFromText(body) };
+            try {
+              var saved = JSON.parse(localStorage.getItem('fixerctrl-posts') || '[]');
+              saved.unshift(created);
+              localStorage.setItem('fixerctrl-posts', JSON.stringify(saved));
+              posts.unshift(created);
+              location.hash = '#/blog/' + slug;
+            } catch (err) {
+              status.hidden = false;
+              status.className = 'form-status error';
+              status.textContent = 'This browser could not save the post. Check that local storage is enabled.';
+            }
+          });
+        });
+      }
+    };
+  }
+
+  function settings() {
+    return {
+      title: 'Site look',
+      html:
+        '<div class="page-head"><h1>Site look</h1><p class="lead">Set the atmosphere: monochrome tech, a little dramatic, still readable.</p></div>' +
+        '<div class="settings-panel">' +
+          '<form id="settingsForm">' +
+            '<div class="field"><label for="siteBackground">Background image</label><input class="upload" id="siteBackground" type="file" accept="image/png,image/jpeg,image/gif,image/webp"><span class="upload-note">Optional. Use a circuit board, server room or other tech image. PNG, JPEG, GIF or WebP, under 1.5 MB.</span></div>' +
+            '<img class="settings-preview" id="backgroundPreview" alt="Current site background preview">' +
+            '<div class="actions"><button class="btn" type="submit">Apply background</button><button class="btn ghost" id="resetBackground" type="button">Reset default</button><a class="btn ghost" href="#/blog">Back to blog</a></div>' +
+            '<div id="settingsStatus" class="form-status" role="status" hidden></div>' +
+          '</form>' +
+        '</div>',
+      after: function () {
+        var preview = $('#backgroundPreview'), status = $('#settingsStatus');
+        function showPreview(src) {
+          preview.src = src || getComputedStyle(document.documentElement).getPropertyValue('--site-image').replace(/^url\(["']?/, '').replace(/["']?\)$/, '');
+        }
+        showPreview();
+        $('#siteBackground').addEventListener('change', function () {
+          readImage(this.files[0], function (error, image) {
+            if (error) {
+              status.hidden = false; status.className = 'form-status error'; status.textContent = error;
+              return;
+            }
+            if (image) showPreview(image);
+          });
+        });
+        $('#settingsForm').addEventListener('submit', function (e) {
+          e.preventDefault();
+          readImage($('#siteBackground').files[0], function (error, image) {
+            if (error) {
+              status.hidden = false; status.className = 'form-status error'; status.textContent = error;
+              return;
+            }
+            if (!image) {
+              status.hidden = false; status.className = 'form-status'; status.textContent = 'Choose an image first, or use Reset default.';
+              return;
+            }
+            saveSiteBackground(image);
+            status.hidden = false; status.className = 'form-status'; status.textContent = 'Background applied across the site on this browser.';
+          });
+        });
+        $('#resetBackground').addEventListener('click', function () {
+          saveSiteBackground('');
+          showPreview();
+          status.hidden = false; status.className = 'form-status'; status.textContent = 'The default monochrome tech background is active.';
+        });
+      }
+    };
+  }
+
   function post(slug) {
     var i = -1;
     posts.forEach(function (p, n) { if (p.slug === slug) i = n; });
@@ -599,13 +854,13 @@
       title: p.title,
       html:
         '<a class="back" href="#/blog">All posts</a>' +
-        '<header class="article-head"><h1>' + p.title + '</h1>' +
+        '<header class="article-head"><h1>' + escapeHtml(p.title) + '</h1>' +
           '<p class="meta"><time datetime="' + p.date + '">' + fmtDate(p.date) + '</time><span>' + mins(p.body) + ' min read</span></p>' +
           tagList(p.tags) + '</header>' +
-        '<article class="prose">' + p.body + '</article>' +
+        '<article class="prose">' + postImage(p) + p.body + '</article>' +
         '<nav class="pager" aria-label="More posts">' +
-          (older ? '<a href="#/blog/' + older.slug + '"><small>Older post</small>' + older.title + '</a>' : '<span></span>') +
-          (newer ? '<a href="#/blog/' + newer.slug + '" style="text-align:right"><small>Newer post</small>' + newer.title + '</a>' : '') +
+          (older ? '<a href="#/blog/' + encodeURIComponent(older.slug) + '"><small>Older post</small>' + escapeHtml(older.title) + '</a>' : '<span></span>') +
+          (newer ? '<a href="#/blog/' + encodeURIComponent(newer.slug) + '" style="text-align:right"><small>Newer post</small>' + escapeHtml(newer.title) + '</a>' : '') +
         '</nav>'
     };
   }
@@ -770,11 +1025,14 @@
   function render() {
     var parts = location.hash.replace(/^#\/?/, '').split('/').filter(Boolean);
     var page = parts[0] || 'home', view;
-    if (page === 'home') view = home();
+    if ((page === 'write' || page === 'settings') && !currentUser) view = authPage();
+    else if (page === 'home') view = home();
     else if (page === 'about') view = about();
     else if (page === 'projects') view = projects();
     else if (page === 'skills') view = skills();
     else if (page === 'blog') view = parts[1] ? post(parts[1]) : blog();
+    else if (page === 'write') view = writePost();
+    else if (page === 'settings') view = settings();
     else if (page === 'contact') view = contact();
     else view = notFound();
 
@@ -812,6 +1070,12 @@
     this.setAttribute('aria-expanded', String(open));
     this.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
   });
+  $('#authControl').addEventListener('click', function (e) {
+    if (currentUser && authClient) {
+      e.preventDefault();
+      authClient.auth.signOut();
+    }
+  });
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && $('#siteHeader').classList.contains('open')) { $('#menuBtn').click(); $('#menuBtn').focus(); }
   });
@@ -823,6 +1087,8 @@
   $('#footLinks').innerHTML = foot;
 
   syncThemeLabel();
+  updateAuthControl();
+  initAuth();
   window.addEventListener('hashchange', render);
   render();
 })();
